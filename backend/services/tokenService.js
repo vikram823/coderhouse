@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { JWT_ACCESS_SECRET, JWT_REFRESH_SECRET } from "../config";
+import Token from "../model/tokenModel";
 
 const TokenService = {
   genrateTokens(payload) {
@@ -11,6 +12,16 @@ const TokenService = {
     });
 
     return { accessToken, refreshToken };
+  },
+
+  async storerRefToken(token, userId) {
+    try {
+      
+      await Token.create({ token, userId });
+
+    } catch (err) {
+      console.log(err.message);
+    }
   },
 };
 

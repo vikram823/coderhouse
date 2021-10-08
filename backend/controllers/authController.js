@@ -4,7 +4,6 @@ import {
   userService,
   tokenService,
 } from "../services";
-import UserService from "../services/userService";
 import UserDtos from "../dtos/userDtos";
 
 const AuthController = {
@@ -24,10 +23,11 @@ const AuthController = {
 
     // otp sms
     try {
-      await otpService.sendBySms(phone, otp);
+      // await otpService.sendBySms(phone, otp);
       return res.json({
         hash: `${hashedOtp}.${expires}`,
         phone,
+        otp
       });
     } catch (err) {
       console.log(err);
@@ -62,7 +62,7 @@ const AuthController = {
     try {
       user = await userService.findUser({ phone });
       if (!user) {
-        user = await UserService.createUser({ phone });
+        user = await userService.createUser({ phone });
       }
     } catch (err) {
       console.log(err);
@@ -74,13 +74,20 @@ const AuthController = {
       activated: false,
     });
 
+    await tokenService.storerRefToken(refreshToken, user._id);
+
     res.cookie("refreshToken", refreshToken, {
       maxAge: 1000 * 60 * 60 * 24 * 30,
       httpOnly: true,
     });
 
+    res.cookie("accessToken", accessToken, {
+      maxAge: 1000 * 60 * 60 * 24 * 30,
+      httpOnly: true,
+    });
+
     const userDtos = new UserDtos(user);
-    return res.json({ accessToken, user: userDtos });
+    return res.json({ auth: true, user: userDtos });
   },
 };
 
