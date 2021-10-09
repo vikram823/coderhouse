@@ -7,6 +7,7 @@ import {
 import UserDtos from "../dtos/userDtos";
 
 const AuthController = {
+
   async sendOtp(req, res) {
     const { phone } = req.body;
 
@@ -27,13 +28,14 @@ const AuthController = {
       return res.json({
         hash: `${hashedOtp}.${expires}`,
         phone,
-        otp
+        otp,
       });
     } catch (err) {
       console.log(err);
       return res.status(500).json({ message: "Sending otp failed!" });
     }
   },
+
   async verifyOtp(req, res) {
     const { phone, otp, hash } = req.body;
 
@@ -42,8 +44,6 @@ const AuthController = {
     }
 
     const [hashedOtp, expires] = hash.split(".");
-    console.log(expires);
-    console.log(Date.now());
 
     if (Date.now() > +expires) {
       return res.status(400).json({ message: "OTP has expired!" });

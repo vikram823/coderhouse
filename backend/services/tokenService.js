@@ -16,12 +16,14 @@ const TokenService = {
 
   async storerRefToken(token, userId) {
     try {
-      
       await Token.create({ token, userId });
-
     } catch (err) {
       console.log(err.message);
     }
+  },
+
+  async verifyAccessToken(accessToken) {
+    return jwt.verify(accessToken, JWT_ACCESS_SECRET);
   },
 };
 
