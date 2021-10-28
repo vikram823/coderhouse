@@ -2,7 +2,7 @@ import { tokenService } from "../services";
 
 async function auth(req, res, next) {
   try {
-    const { accessToken, refreshToken } = req.cookies;
+    const { accessToken} = req.cookies;
     if (!accessToken) {
       throw new Error();
     }

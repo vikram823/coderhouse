@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { BASE_URL } from "../config";
 
 const Schema = mongoose.Schema;
 
@@ -17,9 +18,13 @@ const userSchema = new Schema(
     },
     avatar: {
       type: String,
+      get: (avatar) => {
+        if (!avatar) return;
+        return `${BASE_URL}${avatar}`;
+      },
     },
   },
-  { timestamps: true }
+  { timestamps: true, toJSON: { getters: true } }
 );
 
 export default mongoose.model("User", userSchema, "users");

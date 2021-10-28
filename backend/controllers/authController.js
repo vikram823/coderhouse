@@ -7,7 +7,6 @@ import {
 import UserDtos from "../dtos/userDtos";
 
 const AuthController = {
-
   async sendOtp(req, res) {
     const { phone } = req.body;
 
@@ -88,6 +87,70 @@ const AuthController = {
 
     const userDtos = new UserDtos(user);
     return res.json({ auth: true, user: userDtos });
+  },
+
+  async refresh(req, res) {
+    const { refreshToken: refTokenFromCookies } = req.cookies;
+
+    let userData;
+
+    try {
+      userData = await tokenService.verifyRefreshToken(refTokenFromCookies);
+    } catch (err) {
+      return res.status(401).json({ message: "Inavalid token" });
+    }
+
+    try {
+      const token = await tokenService.findRefreshToken(
+        userData._id,
+        refTokenFromCookies
+      );
+
+      if (!token) {
+        return res.status(401).json({ message: "Invalid token" });
+      }
+    } catch (err) {
+      return res.status(500).json({ message: "Something went wrong" });
+    }
+
+    const user = await userService.findUser({ _id: userData._id });
+    if (!user) {
+      return res.status(404).json({ message: "No user found" });
+    }
+
+    const { accessToken, refreshToken } = tokenService.genrateTokens({
+      _id: userData._id,
+    });
+
+    try {
+      await tokenService.updateRefreshToken(userData._id, refreshToken);
+    } catch (err) {
+      return res.status(500).json({ message: "Something went wrong" });
+    }
+
+    res.cookie("refreshToken", refreshToken, {
+      maxAge: 1000 * 60 * 60 * 24 * 30,
+      httpOnly: true,
+    });
+
+    res.cookie("accessToken", accessToken, {
+      maxAge: 1000 * 60 * 60 * 24 * 30,
+      httpOnly: true,
+    });
+
+    const userDtos = new UserDtos(user);
+    return res.json({ auth: true, user: userDtos });
+  },
+
+  async logout(req, res) {
+    const { refreshToken } = req.cookies;
+
+    await tokenService.removeToken(refreshToken);
+
+    res.clearCookie("refreshToken");
+    res.clearCookie("accessToken");
+
+    res.json({ user: null, isAuth: false });
   },
 };
 
